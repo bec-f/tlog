@@ -37,14 +37,6 @@
 /** Number of WINCH signals caught */
 static volatile sig_atomic_t tlog_tty_source_sig = 0;
 
-
-
-/**MY CHANGE!!! MY CHANGE!!
- * Hopefully will help limit based on rate of typing, if I understand sudosh2 correctly */
-#define BYTES_THROTTLE 2
-
-
-
 /** SIGWINCH handler */
 static void
 tlog_tty_source_winch_sighandler(int signum)
@@ -267,24 +259,12 @@ tlog_tty_source_read(struct tlog_source *source, struct tlog_pkt *pkt)
      * which can block.
      */
     assert(TLOG_TTY_SOURCE_FD_IDX_OUT == 0);
-
-    FILE *f;
-    f = fopen("/usr/local/bin/rates.txt", "a");
-    if(f == NULL){
-        fprintf(stdout, "error opening file\n");
-        exit(1);
-    }
-    time_t prev_time, cur_time;
-    time(&prev_time);
-    double rate;
-    double time_change;
-    i = 0;
-    while(i < TLOG_ARRAY_SIZE(tty_source->fd_list)) {
+    for (i = 0; i < TLOG_ARRAY_SIZE(tty_source->fd_list); i++) {
         if (tty_source->fd_list[i].revents & (POLLIN | POLLHUP | POLLERR)) {
             ssize_t rc;
 
             rc = read(tty_source->fd_list[i].fd,
-                       tty_source->io_buf, tty_source->io_size);
+                      tty_source->io_buf, tty_source->io_size);
 
             if (rc < 0) {
                 return TLOG_GRC_ERRNO;
@@ -292,27 +272,12 @@ tlog_tty_source_read(struct tlog_source *source, struct tlog_pkt *pkt)
                 if (clock_gettime(tty_source->clock_id, &ts) < 0) {
                     return TLOG_GRC_ERRNO;
                 }
-		fprintf(f, "rc=%d\n", rc);
-                time(&cur_time);
-                time_change = difftime(cur_time, prev_time);
-                rate = rc/time_change;
-                fprintf(f, "rate=%f\n", rate);
-                if(rate > BYTES_THROTTLE){
-                    time(&prev_time);
-                    i++;
-		    memset(tty_source->io_buf, 0L, tty_source->io_size);
-                    continue;
-                }
-		else{
-                    tlog_pkt_init_io(pkt, &ts,
+                tlog_pkt_init_io(pkt, &ts,
                                  i == TLOG_TTY_SOURCE_FD_IDX_OUT,
                                  tty_source->io_buf, false, rc);
-		    goto success;
-		}
             }
+            goto success;
         }
-        time(&prev_time);
-        i++;
     }
 
 success:
@@ -323,7 +288,6 @@ success:
         }
     }
 
-    fclose(f);
     return TLOG_RC_OK;
 }
 

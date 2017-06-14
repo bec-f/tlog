@@ -83,6 +83,7 @@ struct tlog_pkt_data_io {
 /** Packet */
 struct tlog_pkt {
     struct timespec     timestamp;      /**< Timestamp */
+    //add a rate value??
     enum tlog_pkt_type  type;           /**< Packet type */
     union {
         struct tlog_pkt_data_window     window; /**< Window change data */
