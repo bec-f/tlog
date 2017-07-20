@@ -19,11 +19,12 @@ extern const struct tlog_sink_type tlog_rate_limit_sink_type;
  */
 static inline tlog_grc
 tlog_rate_limit_sink_create(struct tlog_sink **psink,
-                            strut tlog_sink **dsink,
+                            struct tlog_sink **dsink,
                             uint64_t           rate)
 {
     assert(psink != NULL);
     assert(dsink != NULL);
+    assert(tlog_sink_is_valid(*dsink));
     return tlog_sink_create(psink, &tlog_rate_limit_sink_type,
                             dsink, rate);
 }

@@ -16,7 +16,8 @@ tog_rate_limit_sink_is_valid(const struct tlog_sink *sink)
 {
     struct tlog_rate_limit_sink *rate_limit_sink =
                                 (struct tlog_rate_limit_sink *)sink;
-    return rate_limit_sink != NULL;
+    return rate_limit_sink != NULL &&
+           tlog_sink_is_valid(rate_limit_sink->dsink);
 }
 
 static void
@@ -35,12 +36,12 @@ tlog_rate_limit_sink_init(struct tlog_sink *sink, va_list ap)
 {
     struct tlog_rate_limit_sink *rate_limit_sink =
                                  (struct tlog_rate_limit_sink *)sink;
-    struct tlog_sink *dpsink = va_arg(ap, struct tlog_sink *);
+    struct tlog_sink *pdsink = va_arg(ap, struct tlog_sink *);
 
     if(dsink == NULL){
       goto error;
     }
-    rate_limit_sink->dsink = dpsink;
+    rate_limit_sink->dsink = pdsink;
     rate_limit_sink->rate = va_arg(ap, int)
     return TLOG_RC_OK;
 

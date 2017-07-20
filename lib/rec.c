@@ -117,13 +117,15 @@ static tlog_grc
 tlog_rec_create_log_sink(struct tlog_errs **perrs,
                          struct tlog_sink **psink,
                          struct json_object *conf,
-                         unsigned int session_id)
+                         unsigned int session_id
+                         uint64_t            rate)
 {
     tlog_grc grc;
     int64_t num;
     const char *str;
     struct json_object *obj;
     struct tlog_sink *sink = NULL;
+    struct tlog_sink *r_sink = NULL;
     struct tlog_json_writer *writer = NULL;
     int fd = -1;
     int rc;
@@ -347,9 +349,24 @@ tlog_rec_create_log_sink(struct tlog_errs **perrs,
     }
     writer = NULL;
 
-    *psink = sink;
-    sink = NULL;
-    grc = TLOG_RC_OK;
+    if(rate != 0){
+        *psink = sink;
+        sink = NULL;
+        grc = TLOG_RC_OK;
+    } else {
+        //Create the rate-limit sink with the `sink` variable being the log sink
+        grc = tlog_rate_limit_sink_create(&r_sink, &sink, rate);
+        if (grc != TLOG_RC_OK) {
+            tlog_errs_pushc(perrs, grc);
+            tlog_errs_pushs(perrs, "Failed creating log sink");
+            goto cleanup;
+        }
+        *psink = r_sink;
+        sink = NULL;
+        r_sink = NULL;
+        grc = TLOG_RC_OK;
+    }
+
 cleanup:
 
     if (fd >= 0) {
@@ -723,7 +740,7 @@ tlog_rec(struct tlog_errs **perrs, uid_t euid, gid_t egid,
     }
 
     /* Create the log sink */
-    grc = tlog_rec_create_log_sink(perrs, &log_sink, conf, session_id);
+    grc = tlog_rec_create_log_sink(perrs, &log_sink, conf, session_id, check_rate);
     if (grc != TLOG_RC_OK) {
         tlog_errs_pushs(perrs, "Failed creating log sink");
         goto cleanup;
