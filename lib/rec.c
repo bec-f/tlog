@@ -355,7 +355,7 @@ tlog_rec_create_log_sink(struct tlog_errs **perrs,
         grc = TLOG_RC_OK;
     } else {
         //Create the rate-limit sink with the `sink` variable being the log sink
-        grc = tlog_rate_limit_sink_create(&r_sink, &sink, rate);
+        grc = tlog_rate_limit_sink_create(&r_sink, &sink, true, rate);
         if (grc != TLOG_RC_OK) {
             tlog_errs_pushc(perrs, grc);
             tlog_errs_pushs(perrs, "Failed creating log sink");
