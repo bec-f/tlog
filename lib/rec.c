@@ -117,7 +117,7 @@ static tlog_grc
 tlog_rec_create_log_sink(struct tlog_errs **perrs,
                          struct tlog_sink **psink,
                          struct json_object *conf,
-                         unsigned int session_id
+                         unsigned int session_id,
                          uint64_t            rate)
 {
     tlog_grc grc;
@@ -490,39 +490,16 @@ tlog_rec_transfer(struct tlog_errs    **perrs,
         if (tlog_pkt_pos_is_in(&log_pos, &pkt)) {
             /* If asked to log this type of packet */
             if (item_mask & (1 << tlog_rec_item_from_pkt(&pkt))) {
-                if(pkt.type == TLOG_PKT_TYPE_IO && cutoff_rate != 0){
+                grc = tlog_sink_write(log_sink, &pkt, &log_pos, NULL);
 
-                    /* Get the rate as an integer with decimal precision */
-                    d_rate = (double)(pkt.data.io.len)/(double)(time_change);
-                    cur_rate = d_rate * 1000000;
-
-                    if(cur_rate < cutoff_rate && d_rate > 0.0){
-                        grc = tlog_sink_write(log_sink, &pkt, &log_pos, NULL);
-                        if (grc != TLOG_RC_OK &&
-                            grc != TLOG_GRC_FROM(errno, EINTR)) {
-
-                            tlog_errs_pushc(perrs, grc);
-                            tlog_errs_pushs(perrs, "Failed logging terminal data");
-                            return_grc = grc;
-                            goto cleanup;
-                        }
-                        log_pending = true;
-                    } else {
-                        tlog_pkt_pos_move_past(&log_pos, &pkt);
-                    }
-                    continue;
-                } else{
-                    grc = tlog_sink_write(log_sink, &pkt, &log_pos, NULL);
-
-                    if (grc != TLOG_RC_OK &&
-                        grc != TLOG_GRC_FROM(errno, EINTR)) {
-                        tlog_errs_pushc(perrs, grc);
-                        tlog_errs_pushs(perrs, "Failed logging terminal data");
-                        return_grc = grc;
-                        goto cleanup;
+                if (grc != TLOG_RC_OK &&
+                    grc != TLOG_GRC_FROM(errno, EINTR)) {
+                    tlog_errs_pushc(perrs, grc);
+                    tlog_errs_pushs(perrs, "Failed logging terminal data");
+                    return_grc = grc;
+                    goto cleanup;
                     }
                     log_pending = true;
-                }
             } else {
                 tlog_pkt_pos_move_past(&log_pos, &pkt);
             }
@@ -534,17 +511,7 @@ tlog_rec_transfer(struct tlog_errs    **perrs,
         log_pos = TLOG_PKT_POS_VOID;
         tty_pos = TLOG_PKT_POS_VOID;
 
-        /*Start timer for timing read*/
-        clock_gettime(CLOCK_MONOTONIC, &prev_time);
-
         grc = tlog_source_read(tty_source, &pkt);
-
-        /*End timer for timing read*/
-        clock_gettime(CLOCK_MONOTONIC, &cur_time);
-
-        /*Time elapsed in micro-seconds*/
-        time_change = (cur_time.tv_sec - prev_time.tv_sec) * 1000000 + (cur_time.tv_nsec - prev_time.tv_nsec)/1000;
-
         if (grc != TLOG_RC_OK) {
             if (grc == TLOG_GRC_FROM(errno, EINTR)) {
                 continue;

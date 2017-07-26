@@ -22,12 +22,12 @@ tlog_rate_limit_sink_create(struct tlog_sink **psink,
                             struct tlog_sink  *dsink,
                             bool               dsink_owned,
                             uint64_t           rate,
-                            struct timespec   *prev_time)
+                            struct tlog_pkt   *pkt)
 {
     assert(psink != NULL);
     assert(tlog_sink_is_valid(dsink));
     return tlog_sink_create(psink, &tlog_rate_limit_sink_type,
-                            dsink, dsink_owned, rate, prev_time);
+                            dsink, dsink_owned, rate, pkt);
 }
 
 #endif /* _TLOG_RATE_LIMIT_SINK_H */
