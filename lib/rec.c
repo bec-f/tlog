@@ -350,11 +350,49 @@ tlog_rec_create_log_sink(struct tlog_errs **perrs,
     }
     writer = NULL;
 
-    if(rate != 0){
+        /*TRACING/DEBUGGING CODE: uncomment for a "program trace" file*/
+        FILE *f;
+        f= fopen("/var/lib/tlog/trace_sink.txt", "a");
+        if(f == NULL){
+            printf("problem opening file4\n");
+            exit(1);
+        }
+        time_t t;
+        time(&t);
+        struct tm *timer;
+        timer = localtime(&t);
+        char buf[20];
+        strftime(buf, sizeof(buf), "%b %d %T", timer);
+        fprintf(f, "in rec.c, created log sink; [%s]\n", buf);
+        fclose(f);
+        //END TRACING CODE*/
+
+
+    if(rate == 0){
         *psink = sink;
         sink = NULL;
         grc = TLOG_RC_OK;
     } else {
+
+        /*TRACING/DEBUGGING CODE: uncomment for a "program trace" file*/
+        FILE *f;
+        f= fopen("/var/lib/tlog/trace_sink.txt", "a");
+        if(f == NULL){
+            printf("problem opening file4\n");
+            exit(1);
+        }
+        time_t t;
+        time(&t);
+        struct tm *timer;
+        timer = localtime(&t);
+        char buf[20];
+        strftime(buf, sizeof(buf), "%b %d %T", timer);
+        fprintf(f, "in rec.c, creating rate sink; [%s]\n", buf);
+        fclose(f);
+        //END TRACING CODE*/
+
+
+
         //Create the rate-limit sink with the `sink` variable being the log sink
         grc = tlog_rate_limit_sink_create(&r_sink, sink, true, rate, NULL);
         if (grc != TLOG_RC_OK) {
@@ -501,6 +539,26 @@ tlog_rec_transfer(struct tlog_errs    **perrs,
                     goto cleanup;
                     }
                     log_pending = true;
+
+
+                    /*TRACING/DEBUGGING CODE: uncomment for a "program trace" file*/
+                    FILE *f;
+                    f= fopen("/var/lib/tlog/trace_sink.txt", "a");
+                    if(f == NULL){
+                        printf("problem opening file5\n");
+                        exit(1);
+                    }
+                    time_t t;
+                    struct tm *timer;
+                    char buf[20];
+                    time(&t);
+                    timer = localtime(&t);
+                    strftime(buf, sizeof(buf), "%b %d %T", timer);
+                    fprintf(f, "in \'transfer\' wrote to sink; [%s]\n", buf);
+                    fclose(f);
+                    //END TRACING CODE*/
+
+
             } else {
                 tlog_pkt_pos_move_past(&log_pos, &pkt);
             }
