@@ -22,6 +22,7 @@
 
 #include <tlog/rec.h>
 #include <tlog/rec_item.h>
+#include <tlog/rate_limit_sink.h>
 #include <tlog/json_sink.h>
 #include <tlog/syslog_json_writer.h>
 #include <tlog/journal_json_writer.h>
@@ -355,7 +356,7 @@ tlog_rec_create_log_sink(struct tlog_errs **perrs,
         grc = TLOG_RC_OK;
     } else {
         //Create the rate-limit sink with the `sink` variable being the log sink
-        grc = tlog_rate_limit_sink_create(&r_sink, &sink, true, rate);
+        grc = tlog_rate_limit_sink_create(&r_sink, sink, true, rate, NULL);
         if (grc != TLOG_RC_OK) {
             tlog_errs_pushc(perrs, grc);
             tlog_errs_pushs(perrs, "Failed creating log sink");
