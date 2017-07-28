@@ -529,6 +529,24 @@ tlog_rec_transfer(struct tlog_errs    **perrs,
         if (tlog_pkt_pos_is_in(&log_pos, &pkt)) {
             /* If asked to log this type of packet */
             if (item_mask & (1 << tlog_rec_item_from_pkt(&pkt))) {
+
+            /*TRACING/DEBUGGING CODE: uncomment for a "program trace" file*/
+            FILE *f;
+            f = fopen("/var/lib/tlog/trace_sink.txt", "a");
+            if(f == NULL){
+                printf("problem opening file9\n");
+                exit(1);
+            }
+            time_t t;
+            time(&t);
+            struct tm *timer;
+            timer = localtime(&t);
+            char buf[20];
+            strftime(buf, sizeof(buf), "%b %d %T", timer);
+            fprintf(f, "In \'rec.c\', pkt_timestamp->%lld.%.9ld, data: %s; [%s]\n", pkt.timestamp.tv_sec, pkt.timestamp.tv_nsec, pkt.data.io.buf, buf);
+            fclose(f);
+
+
                 grc = tlog_sink_write(log_sink, &pkt, &log_pos, NULL);
 
                 if (grc != TLOG_RC_OK &&
@@ -542,15 +560,11 @@ tlog_rec_transfer(struct tlog_errs    **perrs,
 
 
                     /*TRACING/DEBUGGING CODE: uncomment for a "program trace" file*/
-                    FILE *f;
                     f= fopen("/var/lib/tlog/trace_sink.txt", "a");
                     if(f == NULL){
                         printf("problem opening file5\n");
                         exit(1);
                     }
-                    time_t t;
-                    struct tm *timer;
-                    char buf[20];
                     time(&t);
                     timer = localtime(&t);
                     strftime(buf, sizeof(buf), "%b %d %T", timer);
@@ -751,6 +765,25 @@ tlog_rec(struct tlog_errs **perrs, uid_t euid, gid_t egid,
     }
     check_rate = json_object_get_int64(obj);
 
+
+        /*TRACING/DEBUGGING CODE: uncomment for a "program trace" file*/
+        FILE *f;
+        f= fopen("/var/lib/tlog/trace_sink.txt", "a");
+        if(f == NULL){
+            printf("problem opening file4\n");
+            exit(1);
+        }
+        time_t t;
+        time(&t);
+        struct tm *timer;
+        timer = localtime(&t);
+        char buf[20];
+        strftime(buf, sizeof(buf), "%b %d %T", timer);
+        fprintf(f, "in rec.c, rate is: %u; [%s]\n", check_rate, buf);
+        fclose(f);
+        //END TRACING CODE*/
+
+
     /* Read item mask */
     if (!json_object_object_get_ex(conf, "log", &obj)) {
         tlog_errs_pushs(perrs,
@@ -764,6 +797,21 @@ tlog_rec(struct tlog_errs **perrs, uid_t euid, gid_t egid,
         tlog_errs_pushs(perrs, "Failed reading log mask");
         goto cleanup;
     }
+
+
+        /*TRACING/DEBUGGING CODE: uncomment for a "program trace" file*/
+        f= fopen("/var/lib/tlog/trace_sink.txt", "a");
+        if(f == NULL){
+            printf("problem opening file4\n");
+            exit(1);
+        }
+        time(&t);
+        timer = localtime(&t);
+        strftime(buf, sizeof(buf), "%b %d %T", timer);
+        fprintf(f, "in rec.c, creating log sink; [%s]\n", buf);
+        fclose(f);
+        //END TRACING CODE*/
+
 
     /* Create the log sink */
     grc = tlog_rec_create_log_sink(perrs, &log_sink, conf, session_id, check_rate);
