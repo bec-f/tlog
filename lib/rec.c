@@ -711,6 +711,7 @@ tlog_rec(struct tlog_errs **perrs, uid_t euid, gid_t egid,
         goto cleanup;
     }
 
+
     /* Create the log sink */
     grc = tlog_rec_create_log_sink(perrs, &log_sink, conf, session_id, check_rate);
     if (grc != TLOG_RC_OK) {
