@@ -86,9 +86,7 @@ tlog_rate_limit_sink_write(struct tlog_sink *sink,
         grc = TLOG_RC_OK;
         goto end;
     }
-
     if(rate_limit_sink->prev_pkt->type != TLOG_PKT_TYPE_IO || rate_limit_sink->rate == 0){
-
         grc = tlog_sink_write(rate_limit_sink->dsink, rate_limit_sink->prev_pkt,
                 rate_limit_sink->prev_ppos, rate_limit_sink->prev_end);
         goto end;
@@ -101,13 +99,11 @@ tlog_rate_limit_sink_write(struct tlog_sink *sink,
         uint64_t cur_rate = d_rate * 1000000;
 
         if(cur_rate < rate_limit_sink->rate) {
-
             grc = tlog_sink_write(rate_limit_sink->dsink, rate_limit_sink->prev_pkt,
                     rate_limit_sink->prev_ppos, rate_limit_sink->prev_end);
             goto end;
         }
         else {
-
             tlog_pkt_pos_move_past(rate_limit_sink->prev_ppos, rate_limit_sink->prev_pkt);
             return TLOG_RC_OK;
         }
